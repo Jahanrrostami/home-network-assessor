@@ -1,0 +1,54 @@
+{
+  "note": "Starter list only. A product that is absent from this file is not a clean bill of health. Entries name the issue and the fix. They do not describe how to abuse it.",
+  "products": [
+    {
+      "id": "apache-httpd",
+      "match_any": ["apache"],
+      "exclude_any": ["tomcat"],
+      "equals": [
+        {
+          "versions": ["2.4.49"],
+          "points": 30,
+          "cves": ["CVE-2021-41773", "CVE-2021-42013"],
+          "summary": "Apache HTTP Server 2.4.49 is affected by path-traversal flaws CVE-2021-41773 and CVE-2021-42013. Upgrade to a current supported release."
+        },
+        {
+          "versions": ["2.4.50"],
+          "points": 30,
+          "cves": ["CVE-2021-42013"],
+          "summary": "Apache HTTP Server 2.4.50 is affected by path-traversal flaw CVE-2021-42013. Upgrade to a current supported release."
+        }
+      ]
+    },
+    {
+      "id": "openssh",
+      "match_any": ["openssh"],
+      "exclude_any": [],
+      "older_than": [
+        {
+          "version": "8.0",
+          "points": 25,
+          "summary": "This OpenSSH build is older than 8.0. Compare the exact version with your operating-system advisory and upgrade."
+        },
+        {
+          "version": "9.0",
+          "points": 15,
+          "summary": "This OpenSSH build is older than 9.0. Compare the exact version with your operating-system advisory and upgrade."
+        }
+      ]
+    },
+    {
+      "id": "vsftpd",
+      "match_any": ["vsftpd"],
+      "exclude_any": [],
+      "equals": [
+        {
+          "versions": ["2.3.4"],
+          "points": 40,
+          "cves": ["CVE-2011-2523"],
+          "summary": "vsftpd 2.3.4 is a backdoored release that was widely copied. Remove it and install the package that belongs to your operating system."
+        }
+      ]
+    }
+  ]
+}

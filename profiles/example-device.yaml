@@ -1,0 +1,15 @@
+# Documentation only. Files named example*.yaml are not loaded.
+# Copy this file to a new name, for example living-room.yaml, before it applies.
+
+mac: "AA:BB:CC:DD:EE:FF"
+ip: "192.168.1.50"
+name: "Living Room PC"
+desired_wol: "block" # allow or block
+notes: "Ask the monitor to treat magic packets for this computer as unwanted."
+
+# Optional, and only used for this exact remote command:
+#   ethtool -s <interface> wol d
+# Key login only. There is no password field. The command cannot be changed from here.
+# ssh_user: "admin"
+# ssh_identity_file: "C:/Users/you/.ssh/id_ed25519"
+# interface: "eth0"

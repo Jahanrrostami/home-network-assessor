@@ -1,0 +1,53 @@
+# Home Network Assessor
+# No network address is set here. The program reads the private LAN on this
+# computer and ignores VPN, virtual, and link-local adapters. To limit a heavy
+# check to one computer, uncomment networks and put that one private address there.
+# networks:
+#   - 192.168.1.25
+
+# Ports to mention when they are open, on top of the built-in high-risk set
+# (Telnet, FTP, VNC, RTSP, MQTT, SMB, and Remote Desktop are always included).
+critical_ports:
+  - 21
+  - 22
+  - 23
+  - 80
+  - 443
+  - 445
+  - 3389
+  - 5900
+  - 8080
+  - 554
+  - 1883
+
+# Optional preset for `python main.py scan`.
+# check: addresses, routers, firewalls, open-ports, all, services
+# port_scan: top10, top100, top1000, full
+# also_services: false
+# Leave check and port_scan unset and that command uses open-ports and top 100.
+# A flag on the command wins over this file.
+# python main.py with no command always shows the check menu and does not probe until you pick.
+
+# Kept so an old line can still be rejected. It is not sent to Nmap.
+# The program uses the fixed profiles in scanner.py. A line here still
+# cannot contain --script, --script-args, -sC, -A, an output flag, or a shell character.
+nmap_args: "-sV --top-ports 100 -T3"
+
+# The monitor always uses this ping scan. Another value is refused.
+# It does not read port_scan and it does not run vulnerability scripts.
+discovery_args: "-sn -T3"
+
+monitor_interval_seconds: 300
+missed_checks_before_offline: 3
+
+# Leave false until you have edited the hook and you accept that it can run.
+block_magic_packets: false
+notify_on_offline: true
+
+# Leave false unless you want this computer to ask api.ipify.org for the public address.
+lookup_public_ip: false
+
+upnp_timeout_seconds: 4
+
+# Extra MAC addresses or IPs to treat as desired_wol: block, besides profiles/.
+wol_block_list: []

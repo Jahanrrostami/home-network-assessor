@@ -1,0 +1,194 @@
+{
+  "generated_at": "2026-10-16T00:00:00+00:00",
+  "networks": [
+    "192.168.1.0/24"
+  ],
+  "public_ip": null,
+  "public_ip_note": "Public IP lookup is off in this example.",
+  "summary": {
+    "hosts": 3,
+    "critical": 2,
+    "high": 0,
+    "medium": 1,
+    "low": 0,
+    "upnp_devices": 0,
+    "upnp_mappings": 1
+  },
+  "notes": [
+    "EXAMPLE FILE. These hosts are fake and only show the layout.",
+    "A quiet result is not proof that a device is safe. The hint list is short, and hosts that ignore probes are missing.",
+    "Scores describe services open on your LAN. A service the router forwards is marked separately and weighs more.",
+    "This report is sensitive. It lists addresses and software versions. Do not publish it."
+  ],
+  "exposure": {
+    "devices": [],
+    "mappings": [
+      {
+        "external_port": 3389,
+        "protocol": "TCP",
+        "internal_client": "192.168.1.20",
+        "internal_port": 3389,
+        "enabled": true,
+        "description": "example desktop"
+      }
+    ],
+    "errors": []
+  },
+  "hosts": [
+    {
+      "ip": "192.168.1.10",
+      "hostname": "EXAMPLE-NOT-YOUR-NETWORK",
+      "state": "up",
+      "mac": "aa:bb:cc:dd:ee:10",
+      "vendor": "Example Vendor",
+      "open_ports": [
+        {
+          "port": 23,
+          "proto": "tcp",
+          "name": "telnet",
+          "product": "",
+          "version": "",
+          "extrainfo": ""
+        },
+        {
+          "port": 445,
+          "proto": "tcp",
+          "name": "microsoft-ds",
+          "product": "",
+          "version": "",
+          "extrainfo": ""
+        },
+        {
+          "port": 80,
+          "proto": "tcp",
+          "name": "http",
+          "product": "Apache httpd",
+          "version": "2.4.49",
+          "extrainfo": ""
+        },
+        {
+          "port": 22,
+          "proto": "tcp",
+          "name": "ssh",
+          "product": "OpenSSH",
+          "version": "7.2p2",
+          "extrainfo": ""
+        }
+      ],
+      "mappings": [],
+      "findings": [
+        {
+          "severity": "LOW",
+          "points": 10,
+          "source": "port:22",
+          "text": "SSH is open. Confirm you meant to run it, and prefer key login."
+        },
+        {
+          "severity": "MEDIUM",
+          "points": 25,
+          "source": "hint:openssh",
+          "text": "This OpenSSH build is older than 8.0. Compare the exact version with your operating-system advisory and upgrade."
+        },
+        {
+          "severity": "HIGH",
+          "points": 40,
+          "source": "port:23",
+          "text": "Telnet is open. It sends logins without encryption. Turn the service off."
+        },
+        {
+          "severity": "LOW",
+          "points": 10,
+          "source": "port:80",
+          "text": "HTTP is open. Router and device admin pages are often here. Do not forward this port unless you have a specific need."
+        },
+        {
+          "severity": "HIGH",
+          "points": 30,
+          "source": "hint:apache-httpd",
+          "text": "Apache HTTP Server 2.4.49 is affected by path-traversal flaws CVE-2021-41773 and CVE-2021-42013. Upgrade to a current supported release."
+        },
+        {
+          "severity": "MEDIUM",
+          "points": 15,
+          "source": "port:445",
+          "text": "SMB file sharing is open. That is common on a Windows PC. Keep the computer patched, and make sure the router does not forward port 445."
+        }
+      ],
+      "risk_score": 130,
+      "risk_level": "CRITICAL",
+      "internet_exposed": false
+    },
+    {
+      "ip": "192.168.1.20",
+      "hostname": "",
+      "state": "unseen",
+      "mac": null,
+      "vendor": null,
+      "open_ports": [],
+      "mappings": [
+        {
+          "external_port": 3389,
+          "protocol": "TCP",
+          "internal_client": "192.168.1.20",
+          "internal_port": 3389,
+          "enabled": true,
+          "description": "example desktop"
+        }
+      ],
+      "findings": [
+        {
+          "severity": "HIGH",
+          "points": 30,
+          "source": "upnp:3389/TCP",
+          "text": "The router forwards TCP port 3389 to 192.168.1.20:3389. That path reaches this computer from the internet while the mapping stays on. Remove the mapping if you do not need it. The scan did not see that internal port open. The mapping still matters, because the service becomes reachable from the internet as soon as it starts."
+        }
+      ],
+      "risk_score": 30,
+      "risk_level": "CRITICAL",
+      "internet_exposed": true
+    },
+    {
+      "ip": "192.168.1.1",
+      "hostname": "home-router",
+      "state": "up",
+      "mac": "aa:bb:cc:dd:ee:01",
+      "vendor": "Example Router",
+      "open_ports": [
+        {
+          "port": 80,
+          "proto": "tcp",
+          "name": "http",
+          "product": "router",
+          "version": "",
+          "extrainfo": ""
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "name": "https",
+          "product": "",
+          "version": "",
+          "extrainfo": ""
+        }
+      ],
+      "mappings": [],
+      "findings": [
+        {
+          "severity": "LOW",
+          "points": 10,
+          "source": "port:80",
+          "text": "HTTP is open. Router and device admin pages are often here. Do not forward this port unless you have a specific need."
+        },
+        {
+          "severity": "LOW",
+          "points": 10,
+          "source": "port:443",
+          "text": "HTTPS is open. Confirm the site is one you meant to run, and do not forward the admin page to the internet."
+        }
+      ],
+      "risk_score": 20,
+      "risk_level": "MEDIUM",
+      "internet_exposed": false
+    }
+  ]
+}

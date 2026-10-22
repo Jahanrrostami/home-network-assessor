@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Home Network Assessment</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; margin: 2rem; line-height: 1.4; }
+    h1, h2 { font-weight: 600; }
+    .notes, .host, .panel { border: 1px solid #333; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+    .notes { background: #2a2416; border-color: #a80; }
+    .CRITICAL { border-color: #f44; }
+    .HIGH { border-color: #f80; }
+    .MEDIUM { border-color: #fc0; }
+    .LOW { border-color: #0a0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #444; padding: 0.4rem; text-align: left; vertical-align: top; word-break: break-word; }
+    .counts span { display: inline-block; margin-right: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Home Network Assessment</h1>
+  <p>Generated 2026-10-16T00:00:00+00:00 | Networks: 192.168.1.0/24</p>
+  <p>Check: open ports. Port scan: top 100. Also services: no</p>
+  <p>Public IP lookup is off in this example.</p>
+  <div class="notes">
+    <strong>Read this before the scores</strong>
+    <ul><li>EXAMPLE FILE. These hosts are fake and only show the layout.</li><li>A quiet result is not proof that a device is safe. The hint list is short, and hosts that ignore probes are missing.</li><li>Scores describe services open on your LAN. A service the router forwards is marked separately and weighs more.</li><li>This report is sensitive. It lists addresses and software versions. Do not publish it.</li></ul>
+  </div>
+  <p class="counts">
+    <span>Hosts 3</span>
+    <span>CRITICAL 2</span>
+    <span>HIGH 0</span>
+    <span>MEDIUM 1</span>
+    <span>LOW 0</span>
+    <span>Forwards 1</span>
+  </p>
+  <div class="panel">
+    <h2>Router forwards</h2>
+    
+    <table>
+      <tr><th>External</th><th>Protocol</th><th>Internal</th><th>On</th><th>Name</th></tr>
+      
+      <tr>
+        <td>3389</td>
+        <td>TCP</td>
+        <td>192.168.1.20:3389</td>
+        <td>True</td>
+        <td>example desktop</td>
+      </tr>
+      
+    </table>
+    
+    
+  </div>
+  
+    
+    <div class="host CRITICAL">
+      <h2>192.168.1.10 (EXAMPLE-NOT-YOUR-NETWORK) — CRITICAL (130)</h2>
+      <p>MAC: aa:bb:cc:dd:ee:10 | Vendor: Example Vendor | Internet forwarded: no</p>
+      
+        <ul>
+          
+          <li>LOW (10): SSH is open. Confirm you meant to run it, and prefer key login.</li>
+          
+          <li>MEDIUM (25): This OpenSSH build is older than 8.0. Compare the exact version with your operating-system advisory and upgrade.</li>
+          
+          <li>HIGH (40): Telnet is open. It sends logins without encryption. Turn the service off.</li>
+          
+          <li>LOW (10): HTTP is open. Router and device admin pages are often here. Do not forward this port unless you have a specific need.</li>
+          
+          <li>HIGH (30): Apache HTTP Server 2.4.49 is affected by path-traversal flaws CVE-2021-41773 and CVE-2021-42013. Upgrade to a current supported release.</li>
+          
+          <li>MEDIUM (15): SMB file sharing is open. That is common on a Windows PC. Keep the computer patched, and make sure the router does not forward port 445.</li>
+          
+        </ul>
+      
+      
+      <table>
+        <tr><th>Port</th><th>Proto</th><th>Service</th><th>Version</th></tr>
+        
+        <tr>
+          <td>23</td>
+          <td>tcp</td>
+          <td>telnet </td>
+          <td> </td>
+        </tr>
+        
+        <tr>
+          <td>445</td>
+          <td>tcp</td>
+          <td>microsoft-ds </td>
+          <td> </td>
+        </tr>
+        
+        <tr>
+          <td>80</td>
+          <td>tcp</td>
+          <td>http Apache httpd</td>
+          <td>2.4.49 </td>
+        </tr>
+        
+        <tr>
+          <td>22</td>
+          <td>tcp</td>
+          <td>ssh OpenSSH</td>
+          <td>7.2p2 </td>
+        </tr>
+        
+      </table>
+      
+    </div>
+    
+    <div class="host CRITICAL">
+      <h2>192.168.1.20 (no name) — CRITICAL (30)</h2>
+      <p>MAC: n/a | Vendor: n/a | Internet forwarded: yes</p>
+      
+        <ul>
+          
+          <li>HIGH (30): The router forwards TCP port 3389 to 192.168.1.20:3389. That path reaches this computer from the internet while the mapping stays on. Remove the mapping if you do not need it. The scan did not see that internal port open. The mapping still matters, because the service becomes reachable from the internet as soon as it starts.</li>
+          
+        </ul>
+      
+      
+    </div>
+    
+    <div class="host MEDIUM">
+      <h2>192.168.1.1 (home-router) — MEDIUM (20)</h2>
+      <p>MAC: aa:bb:cc:dd:ee:01 | Vendor: Example Router | Internet forwarded: no</p>
+      
+        <ul>
+          
+          <li>LOW (10): HTTP is open. Router and device admin pages are often here. Do not forward this port unless you have a specific need.</li>
+          
+          <li>LOW (10): HTTPS is open. Confirm the site is one you meant to run, and do not forward the admin page to the internet.</li>
+          
+        </ul>
+      
+      
+      <table>
+        <tr><th>Port</th><th>Proto</th><th>Service</th><th>Version</th></tr>
+        
+        <tr>
+          <td>80</td>
+          <td>tcp</td>
+          <td>http router</td>
+          <td> </td>
+        </tr>
+        
+        <tr>
+          <td>443</td>
+          <td>tcp</td>
+          <td>https <div>HTTPS.</div></td>
+          <td> </td>
+        </tr>
+        
+      </table>
+      
+    </div>
+    
+  
+</body>
+</html>
