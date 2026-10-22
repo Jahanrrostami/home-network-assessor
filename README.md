@@ -2,7 +2,107 @@
 
 A local check of a home network you own. It lists the devices Nmap can see, scores the open ports, reads the router's port-forward list when the router answers, and writes an HTML report plus a JSON report.
 
-Read [GUIDE.md](GUIDE.md) for the security reasoning, and [README-IMPORTANT.md](README-IMPORTANT.md) before the first scan. The short version: this tool sends real packets, and it refuses any target that is not a private home range.
+Read [GUIDE.md](GUIDE.md) for the safety limits, and [README-IMPORTANT.md](README-IMPORTANT.md) before the first scan. The short version: this tool sends real packets, and it refuses any target that is not a private home range.
+
+## What the project can do
+
+It runs from a computer that is already on the home LAN. That computer is a host. The router is the gateway. The program reads which private LAN this host is on, then asks questions with a small set of fixed probes. It does not log in to anything, and it does not use an address written into the source code.
+
+| Check | Technical action | Why it is useful |
+| --- | --- | --- |
+| IP addresses | ICMP/ARP host discovery, Nmap `-sn -T3` | Lists who answers. A later menu can probe one of those hosts. |
+| Routers | Version detection on the gateway's admin ports, then read-only UPnP | Shows the admin page and any forwards the router published through UPnP. |
+| Firewalls | TCP version detection over a chosen port set | Records open, closed, and filtered from this computer. |
+| Open ports | The same TCP scan, plus Nmap's built-in `vuln` scripts | Adds a script finding when a probed port answers with something the script recognizes. |
+| All | Addresses, then the router, then the firewall scan, then the open-ports scan | One report that keeps discovery, exposure, and service findings together. |
+| DNS, QUIC, DHCP, NTP, and IPsec | Version detection on that named TCP/UDP set only | Those ports are easy to miss in a TCP top-ports list, and several of them are UDP. |
+| Monitor | The same ping discovery, on a timer | Tracks who is still answering. Three misses are required before a device is called offline. |
+
+Every finished check writes an HTML report and a JSON report. The HTML escapes names that came off the network. The report folder is gitignored, because a real report is a map of the house.
+
+## Protocols, the technical side, and why
+
+A home LAN is several protocols stacked on each other. The project checks a few layers on purpose. Checking every protocol would be a different tool, and several of those checks would change the network or attack a service. The sections below say what each protocol is, what this program does with it, and why that scope is the right one.
+
+### IP, and why the target is not typed into the code
+
+IP delivers a packet to an address. IPv4 private ranges used at home are `10.0.0.0/8`, `172.16.0.0/12`, and `192.168.0.0/16`. A public address is reachable from the internet. A hostname is just a name that can point at either one.
+
+`local_lan.py` reads this computer's own adapters and default route and keeps one private LAN. VPN, virtual, loopback, and link-local adapters are ignored. `network_guard.py` then refuses anything that is not entirely inside an allowed private range. Hostnames are refused. Carrier-grade NAT (`100.64.0.0/10`) is refused, because those addresses can belong to the access provider. There is no switch that turns the check off. If the target is refused, exit code 2 means no probe was sent.
+
+That is an allow-list. A block-list of "bad" addresses always misses one. An allow-list fails closed.
+
+### TCP
+
+TCP is the connection protocol. A normal open port completes a three-way handshake: this computer sends SYN, the service answers SYN-ACK, this computer sends ACK. After that, bytes flow in a reliable stream. A closed port answers with RST, which means the host is there and nothing is listening. A filtered port gives no normal answer. A firewall, or a host that drops the packet, looks the same from here.
+
+The firewall check and the open-ports check are TCP scans. Nmap `-sV` is version detection: once a port accepts the handshake, Nmap speaks enough of the application protocol to read a service name and sometimes a version. `--top-ports` scans the ports Nmap ranks as most common. Full means TCP 1–65535, and only TCP. `-T3` is normal timing, one pass from one computer.
+
+The report keeps all three states. `--open` is not used, because hiding closed and filtered ports would throw away the evidence. Closed from this computer is not proof the service is absent on another interface. Filtered is not proof a firewall rule was identified. It means this computer did not get a normal answer.
+
+### UDP
+
+UDP sends datagrams. There is no handshake and no RST. A service that is up may answer with its own payload. A closed port often answers with ICMP "port unreachable". A quiet port answers with nothing, so the scanner cannot tell "open and ignoring us" from "filtered". Nmap marks that uncertainty `open|filtered`. This project shows that state as filtered and says it is not the same as safe.
+
+A full UDP sweep of every port is slow, noisy, and still uncertain. This project does not do one. UDP is used only for the named set: DNS, DHCP, NTP, QUIC, and IPsec. The scan is `-sU` together with `-sV` on those port numbers. If the UDP probe returns no hosts, the TCP hosts from the earlier phase are kept. An empty UDP result is a weak signal, and it must not delete a computer that TCP already saw.
+
+### Ports, and why the same number is not the same service
+
+A port is the number an application uses on top of TCP or UDP. Port 443/TCP and port 443/UDP share a number and are different services. The named-service profile writes both, as `T:443` and `U:443`, for that reason.
+
+`critical_ports` in the config only decides which open ports get a written note. It does not choose the scan. The scan comes from the fixed profile.
+
+### HTTP and HTTPS
+
+HTTP is the text protocol of the web, usually on TCP port 80. A browser, and a router admin page, speak it. The request and the page travel without encryption, so anyone on the path can read them. On a home LAN the path is short. Forwarding port 80 to the internet publishes that page.
+
+HTTPS is HTTP inside TLS, usually on TCP port 443. TLS encrypts the bytes and checks the certificate. Encryption does not decide whether the service should be reachable from the internet. An encrypted router admin page is still an admin page.
+
+Ports 8080 and 8443 are the same two protocols on alternate ports. NAS boxes and old consoles sit there and get forgotten. The router check looks at 22, 23, 80, 443, 8080, and 8443 on the gateway only, with `-sV`, because those are the ports an admin interface uses.
+
+HTTP and HTTPS score 10 when they are on the review list. That is enough to name them in the report. It is not enough to call an ordinary router critical. Telnet on port 23 scores 40 because the login itself has no encryption. Those are different decisions, and the points say so.
+
+### DNS, DHCP, and NTP
+
+DNS, usually UDP/53 and sometimes TCP/53, turns names into addresses. A home router is often the DNS server for the LAN. Asking whether port 53 answers is a fair check. Asking the server for a full copy of a zone is a different action, and this project does not do it.
+
+DHCP gives devices their address, mask, and gateway. The server listens on UDP/67. The client side is UDP/68. This project asks whether those ports answer. It does not build a lease or answer a client. A second DHCP server on a LAN silently hands out the wrong gateway, so seeing the port is already the useful fact.
+
+NTP, UDP/123, synchronizes clocks. Clocks matter for logs and for certificates. The check records whether the port answers and, when version detection gets one, which implementation it looks like. It does not send the queries that have been used to turn an open NTP server into a traffic reflector.
+
+### QUIC and IPsec
+
+QUIC carries HTTP/3 on UDP/443. A TCP scan of port 443 will not see it. That is why the named-service profile has a UDP 443 line next to the TCP 443 line. One is HTTPS. The other is QUIC.
+
+IPsec is the VPN protocol pair this check knows: UDP/500 for IKE, and UDP/4500 for NAT traversal when a middlebox rewrites the packets. The probe is version detection on those ports. It does not try to negotiate a tunnel or log in.
+
+### UPnP, which is discovery plus a small HTTP call
+
+UPnP lets a device ask the router to open a forward. The first step is SSDP, a UDP multicast search to `239.255.255.250` port 1900. A router that is listening answers with a URL. This project fetches that URL only when the host is a private address, caps the body, and refuses a document type that could pull in extra content. The following call is `GetGenericPortMappingEntry`, which reads the list. `AddPortMapping` and `DeletePortMapping` are not in the program. Writing a mapping would change the network. A forward typed by hand into the router is also invisible here, because the tool never logs in to the router.
+
+A forward is a path from the internet to an inside address and port. The score treats that as its own fact. Forwarding Telnet, FTP, SMB, Remote Desktop, VNC, RTSP, or MQTT is CRITICAL even when the LAN-only points are still modest. Any other forward is at least HIGH.
+
+### Discovery, MAC addresses, and the monitor
+
+The address check is `-sn`. Nmap tries to learn which hosts answer, using ARP on a local Ethernet segment when it can, and ICMP echo otherwise. ARP is the local table that binds an IP address to a MAC address. A MAC is tied to the network card, so a later DHCP lease can change the IP without creating a new device. The history in `devices.py` uses the MAC for that reason.
+
+A host that ignores ping and is missing from the ARP table is absent. Absence is not proof the device is off. On Windows, an elevated terminal sees more of the ARP picture.
+
+The monitor repeats that ping. One missed answer is not "powered off". Three misses are required. A round that sees nobody does not move the counters, because that usually means this computer lost the LAN.
+
+### What the vulnerability scripts are, and what they are not
+
+`--script vuln` is Nmap's own category of version and vulnerability checks. It is added only to the open-ports profile and to the open-ports phase of All. No second script, no `--script-args`, no `-sC`, and no `-A`. A line in `config.yaml` named `nmap_args` is validated and never sent.
+
+Scripts report against ports that answer. A top-10 scan where every port is closed produces an empty script list and a score of 0. The report then says LOW because nothing added points, and it says that a quiet result is not proof the device is safe.
+
+If script output contains a request line, a payload, or a shell command, the stored finding keeps the script name and the port and points at the vendor advisory. The raw line is removed so the JSON file cannot become a copy of an exploit.
+
+### Why the arguments are fixed
+
+Nmap can do much more than this project allows. Passing the user's text through would turn a menu into a command shell: a script name, an output file, a list of targets, a shell character. `scanner.py` holds the only argument strings that may be sent. `python-nmap` does not run a shell. It launches `nmap.exe`. If that program is missing, the run stops before any probe.
+
+The menu and the flags only choose which of those profiles to run, which address range inside the already chosen private LAN, and whether the named UDP set is added. Top 1000 and a full TCP scan ask first, because of the time. Open ports and All ask first, because vulnerability probes can upset a printer, a camera, a TV, or an old router.
 
 ## What changed from the first draft
 
